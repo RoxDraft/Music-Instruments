@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concert Grand Studio — แกรนด์เปียโนเล่นได้ & เปียโนไฟฟ้า</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=Noto+Serif+Thai:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#ece6da;--mute:#a39b8c;--line:rgba(236,228,214,.12);--panel:rgba(22,20,16,.86);--gold:oklch(0.80 0.11 82);--gold-d:oklch(0.62 0.10 78)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#14120f;color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;overflow:hidden}
+a{color:var(--gold)}a:hover{color:#fff}
+three-d-stage:not(:defined){visibility:hidden}
+three-d-stage{position:fixed;inset:0;width:100vw;height:100vh}
+#ui{position:fixed;inset:0;pointer-events:none;font-size:12.5px;line-height:1.5}
+.panel{position:absolute;pointer-events:auto;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+.panel .body{overflow:auto;padding:4px 16px 16px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.panel.collapsed .body,.panel.collapsed .tabs{display:none}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 10px;cursor:default}
+.phead h1{font-family:"Noto Serif Thai",serif;font-weight:600;font-size:18px;margin:0;letter-spacing:.01em}
+.phead .eyebrow{font:500 10.5px/1.35 "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.collapse{appearance:none;border:1px solid var(--line);background:transparent;color:var(--mute);width:26px;height:26px;border-radius:7px;font-size:14px;line-height:1;flex:none}
+#left{left:16px;top:16px;width:300px;max-height:calc(100vh - 230px)}
+#right{right:16px;top:16px;width:370px;max-height:calc(100vh - 80px)}
+.sec{padding:12px 0;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0}
+.lbl{font:500 11.5px/1.3 "IBM Plex Sans Thai",sans-serif;color:var(--mute);margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;white-space:nowrap}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:rgba(255,255,255,.04);padding:3px;border-radius:9px}
+.seg button,.btn,.chip{appearance:none;font:inherit;color:var(--ink);background:transparent;border:0;border-radius:7px;padding:7px 8px;cursor:pointer}
+.seg button.on{background:var(--ink);color:#16140f;font-weight:500}
+.list{display:flex;flex-direction:column;gap:4px}
+.opt{appearance:none;font:inherit;color:var(--ink);text-align:left;background:rgba(255,255,255,.03);border:1px solid transparent;border-radius:9px;padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:2px 8px;cursor:pointer}
+.opt:hover{background:rgba(255,255,255,.07)}
+.opt.on{border-color:var(--gold);background:rgba(220,180,90,.08)}
+.opt b{font-weight:500}
+.opt small{color:var(--mute);font-size:11.5px}
+.opt .num{font:400 11px "IBM Plex Mono",monospace;color:var(--mute);align-self:center}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.row span{flex:none;width:86px;color:var(--mute)}
+.row output{font:400 11px "IBM Plex Mono",monospace;width:34px;text-align:right;color:var(--mute)}
+input[type=range]{flex:1;accent-color:var(--gold);min-width:0}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tg{appearance:none;font:inherit;font-size:12.5px;color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:7px 9px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:6px}
+.tg i{font-style:normal;font:500 10px "IBM Plex Mono",monospace;color:var(--mute);align-self:center}
+.tg.on{border-color:var(--gold)}.tg.on i{color:var(--gold)}
+.primary{appearance:none;font:inherit;font-weight:500;width:100%;margin-top:10px;background:var(--gold);color:#1a160f;border:0;border-radius:9px;padding:9px;cursor:pointer}
+.primary:hover{filter:brightness(1.08)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0 16px 8px;background:rgba(255,255,255,.04);padding:3px;border-radius:9px}
+.tabs button{appearance:none;font:inherit;color:var(--mute);background:transparent;border:0;border-radius:7px;padding:7px 4px;cursor:pointer}
+.tabs button.on{background:rgba(255,255,255,.1);color:var(--ink)}
+.h2{font-family:"Noto Serif Thai",serif;font-size:20px;font-weight:600;margin:6px 0 2px;text-wrap:pretty}
+.meta{color:var(--mute);font-size:12px}
+.specs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-radius:10px;overflow:hidden;margin:12px 0}
+.specs div{background:rgba(22,20,16,.9);padding:8px}
+.specs b{display:block;font:500 15px "IBM Plex Mono",monospace;color:var(--ink)}
+.specs small{color:var(--mute);font-size:10.5px}
+ul.tech{margin:6px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.tech li{padding-left:14px;position:relative;text-wrap:pretty}
+ul.tech li:before{content:"";position:absolute;left:0;top:.7em;width:6px;height:1px;background:var(--gold)}
+.quote{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);color:var(--ink);text-wrap:pretty}
+.quote .meta{display:block;margin-bottom:4px;font:500 10.5px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.parts{display:flex;flex-direction:column;gap:3px;margin-top:10px}
+.part{appearance:none;font:inherit;color:var(--ink);text-align:left;background:transparent;border:0;border-radius:8px;padding:6px 8px;display:flex;gap:10px;align-items:baseline;cursor:pointer}
+.part:hover{background:rgba(255,255,255,.06)}
+.part.on{background:rgba(220,180,90,.12)}
+.part .n{font:400 10.5px "IBM Plex Mono",monospace;color:var(--mute);width:18px;flex:none}
+.detail{margin-top:10px;padding:12px;border-radius:10px;border:1px solid var(--gold-d);background:rgba(220,180,90,.06)}
+.detail h3{margin:0 0 4px;font-family:"Noto Serif Thai",serif;font-size:16px;font-weight:600}
+.detail p{margin:0;text-wrap:pretty}
+.detail .mk{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--ink)}
+.detail .mk b{color:var(--gold);font-weight:500}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:grid;grid-template-columns:92px 1fr 46px;gap:8px;align-items:center;font-size:12px}
+.bar .t{height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.bar.cur span:first-child{color:var(--gold)}
+.bar output{font:400 11px "IBM Plex Mono",monospace;color:var(--mute);text-align:right}
+.cmp{display:grid;grid-template-columns:72px repeat(3,1fr);gap:1px;background:var(--line);border-radius:10px;overflow:hidden;font-size:11.5px;line-height:1.45}
+.cmp div{background:rgba(22,20,16,.92);padding:7px}
+.cmp .hd{color:var(--gold);font-weight:500}
+.cmp .rh{color:var(--mute)}
+.note{color:var(--mute);font-size:11.5px;margin-top:8px}
+#views{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:4px;backdrop-filter:blur(14px)}
+#views button{appearance:none;font:inherit;font-size:12.5px;color:var(--ink);background:transparent;border:0;border-radius:8px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+#views button:hover{background:rgba(255,255,255,.08)}
+#hud{position:absolute;left:16px;bottom:44px;width:300px;pointer-events:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(14px)}
+#hud .top{display:flex;align-items:baseline;gap:10px}
+#note{font:500 34px/1 "IBM Plex Mono",monospace;min-width:76px}
+#freq{font:400 11.5px/1.4 "IBM Plex Mono",monospace;color:var(--mute)}
+#spec{width:100%;height:46px;display:block;margin:8px 0 6px}
+.keys{display:flex;flex-wrap:wrap;gap:4px 10px;color:var(--mute);font-size:11.5px}
+kbd{font:500 10.5px "IBM Plex Mono",monospace;color:var(--ink);background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px}
+#toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#16140f;padding:8px 14px;border-radius:9px;font-weight:500;opacity:0;transition:opacity .3s;pointer-events:none}
+@media (max-width:1100px){#left{width:250px}#right{width:300px}#hud{width:250px}#views{top:auto;bottom:16px;left:auto;right:330px;transform:none}#views button{padding:6px 8px}}
+@media (max-height:720px){#hud .keys{display:none}#hud{bottom:40px}#left{max-height:calc(100vh - 210px)}.phead{padding:10px 14px 8px}.phead h1{font-size:16px}}
+</style>
+</head>
+<body>
+<three-d-stage name="concert-grand-studio" background="#14120f"></three-d-stage>
+
+<div id="ui">
+  <aside id="left" class="panel">
+    <div class="phead"><div><div class="eyebrow">Concert Grand Studio</div><h1>ห้องทดลองเปียโน</h1></div><button class="collapse" data-col="left">–</button></div>
+    <div class="body">
+      <div class="sec">
+        <div class="lbl">เครื่องที่เล่นด้วยคีย์บอร์ด</div>
+        <div class="seg" id="instSeg"><button data-inst="grand" class="on">แกรนด์เปียโน</button><button data-inst="ep">เปียโนไฟฟ้า</button></div>
+      </div>
+      <div class="sec">
+        <div class="lbl"><span>ผู้ผลิต · แกรนด์</span><span>ยาว</span></div>
+        <div class="list" id="makers"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">สไตล์ศิลปิน</div>
+        <div class="list" id="artists"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">เสียง & เอฟเฟกต์</div>
+        <div class="row"><span>ความแรง</span><input type="range" id="vel" min="0.15" max="1" step="0.01" value="0.75"><output id="velO">75</output></div>
+        <div class="row"><span>เสียงก้องฮอลล์</span><input type="range" id="rev" min="0" max="0.9" step="0.01" value="0.35"><output id="revO">35</output></div>
+        <div class="toggles">
+          <button class="tg" id="tgSus">Sustain <i>OFF</i></button>
+          <button class="tg on" id="tgFx">เอฟเฟกต์ภาพ <i>ON</i></button>
+          <button class="tg" id="tgTrem">Tremolo (EP) <i>OFF</i></button>
+          <button class="tg" id="tgUna">Una corda <i>OFF</i></button>
+        </div>
+        <button class="primary" id="demo">▶ ฟังตัวอย่างเสียง</button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="views">
+    <button data-view="overview">ภาพรวม</button>
+    <button data-view="player">มุมผู้เล่น</button>
+    <button data-view="top">มองจากบน</button>
+    <button data-view="ep">เปียโนไฟฟ้า</button>
+  </div>
+
+  <aside id="right" class="panel">
+    <div class="phead"><div><div class="eyebrow" id="rEyebrow">ข้อมูล</div></div><button class="collapse" data-col="right">–</button></div>
+    <div class="tabs" id="tabs"><button data-tab="model" class="on">รุ่นนี้</button><button data-tab="parts">แยกชิ้นส่วน</button><button data-tab="compare">เปรียบเทียบ</button></div>
+    <div class="body" id="rbody"></div>
+  </aside>
+
+  <div id="hud">
+    <div class="top"><div id="note">—</div><div id="freq">คลิก/ลากบนคีย์<br>หรือพิมพ์บนคีย์บอร์ด</div></div>
+    <canvas id="spec"></canvas>
+    <div class="keys">
+      <span><kbd>A</kbd>–<kbd>'</kbd> คีย์ขาว</span><span><kbd>W E T Y U O P</kbd> คีย์ดำ</span>
+      <span><kbd>Z</kbd><kbd>X</kbd> อ็อกเทฟ <b id="oct" style="font-weight:500;color:var(--ink)">C4</b></span><span><kbd>Space</kbd> Sustain</span>
+    </div>
+  </div>
+  <div id="toast"></div>
+</div>
+
+<script src="three-d-stage.js"></script>
+<script type="module">
+const stage = document.querySelector('three-d-stage');
+const { THREE } = await stage.ready;
+const renderer = stage._renderer, scene = stage._scene, camera = stage._camera, controls = stage._controls;
+const canvas = renderer.domElement;
+
+// ---------- rendering look ----------
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+{
+  const pm = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene(); env.background = new THREE.Color(0x0c0b0a);
+  const lm = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+  const add = (w, h, x, y, z, rx, ry, c) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), c ? new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide }) : lm); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); env.add(m); };
+  add(8, 3, 0, 6, 0, Math.PI / 2, 0);
+  add(1.2, 6, -6, 2.5, 2, 0, Math.PI / 2, 0xfff1dc);
+  add(1.2, 6, 6, 2.5, -2, 0, -Math.PI / 2, 0xbcd0ff);
+  add(10, 0.6, 0, 1.5, -7, 0, 0, 0x8a7a66);
+  scene.environment = pm.fromScene(env, 0.035).texture;
+  scene.environmentIntensity = 1.25;
+}
+const floor = new THREE.Mesh(new THREE.CircleGeometry(40, 96), new THREE.MeshStandardMaterial({ color: 0x2a231b, roughness: 0.62 }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -0.003; floor.receiveShadow = true; scene.add(floor);
+
+// ---------- helpers ----------
+const MAT = (name, color, roughness, metalness = 0) => new THREE.MeshStandardMaterial({ name, color, roughness, metalness });
+const mats = {
+  ebony: MAT('ebony_polish', 0x121214, 0.12),
+  caseWood: MAT('case_wood', 0x2a1c12, 0.7),
+  ivory: MAT('key_ivory', 0xf2eee4, 0.32),
+  keyBlack: MAT('key_ebony', 0x121212, 0.28),
+  keyExt: MAT('key_extended', 0x2d2b29, 0.3),
+  plate: MAT('plate_gold', 0xc29a48, 0.34, 0.55),
+  spruce: MAT('spruce', 0xd8b885, 0.62),
+  maple: MAT('maple', 0xa5733f, 0.55),
+  felt: MAT('hammer_felt', 0xece5d6, 0.95),
+  steel: MAT('steel_string', 0xdcdcdc, 0.22, 0.75),
+  copper: MAT('copper_string', 0xc07a3c, 0.3, 0.65),
+  brass: MAT('brass', 0xd8b25c, 0.28, 0.65),
+  leather: MAT('leather', 0x1d1714, 0.65),
+  tolex: MAT('tolex', 0x1c1c1c, 0.88),
+  plastic: MAT('harp_cover', 0x151515, 0.42),
+  chrome: MAT('chrome', 0xd2d6da, 0.18, 0.8),
+  alu: MAT('aluminium', 0xb6babe, 0.35, 0.6),
+  tine: MAT('tine_steel', 0xc9ccd0, 0.3, 0.7),
+  coil: MAT('pickup_coil', 0x8e2c1f, 0.5),
+  rubber: MAT('neoprene', 0x2b2b2b, 0.9),
+};
+function mesh(geo, mat, name, parent, x = 0, y = 0, z = 0) { const m = new THREE.Mesh(geo, mat); m.name = name; m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; parent.add(m); return m; }
+const boxG = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+function xf(g, x, y, z, rx = 0, ry = 0, rz = 0) { g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)), new THREE.Vector3(1, 1, 1))); return g; }
+const boxAt = (w, h, d, x, y, z, rx, ry, rz) => xf(boxG(w, h, d), x, y, z, rx, ry, rz);
+function merge(list) {
+  const arr = list.map(g => g.index ? g.toNonIndexed() : g);
+  let n = 0; arr.forEach(g => n += g.attributes.position.count);
+  const p = new Float32Array(n * 3), q = new Float32Array(n * 3); let o = 0;
+  arr.forEach(g => { p.set(g.attributes.position.array, o * 3); q.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; });
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(p, 3)); out.setAttribute('normal', new THREE.BufferAttribute(q, 3));
+  return out;
+}
+function cylBetween(a, b, r, seg = 12) {
+  const len = a.distanceTo(b); const g = new THREE.CylinderGeometry(r, r, len, seg);
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+  g.applyMatrix4(new THREE.Matrix4().compose(a.clone().add(b).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1))); return g;
+}
+const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const BLACK = new Set([1, 3, 6, 8, 10]);
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+const freqOf = m => 440 * Math.pow(2, (m - 69) / 12);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const WK = 0.0235;
+function layout(lo, hi) { const list = []; let wi = 0; for (let m = lo; m <= hi; m++) { const b = BLACK.has(m % 12); list.push({ m, black: b, wi }); if (!b) wi++; } return { list, whites: wi, W: wi * WK }; }
+const keyX = (k, W) => k.black ? -W / 2 + k.wi * WK : -W / 2 + (k.wi + 0.5) * WK;
+const whiteGeo = merge([boxAt(WK - 0.0014, 0.022, 0.15, 0, -0.011, 0.075), boxAt(0.009, 0.018, 0.25, 0, -0.013, -0.125)]);
+const blackGeo = merge([boxAt(0.0126, 0.0135, 0.095, 0, 0.0073, 0.0475), boxAt(0.009, 0.018, 0.25, 0, -0.013, -0.125)]);
+const epWhiteGeo = merge([boxAt(WK - 0.0014, 0.022, 0.15, 0, -0.011, 0.075), boxAt(0.009, 0.018, 0.12, 0, -0.013, -0.06)]);
+const epBlackGeo = merge([boxAt(0.0126, 0.0135, 0.095, 0, 0.0073, 0.0475), boxAt(0.009, 0.018, 0.12, 0, -0.013, -0.06)]);
+
+// grand outline (x, d) — d = depth behind keyboard front
+function outline(L, hw) {
+  const p = new THREE.Path(); p.moveTo(-hw, 0); p.lineTo(-hw, L * 0.78);
+  p.bezierCurveTo(-hw, L * 0.965, -hw * 0.72, L, -hw * 0.3, L);
+  p.bezierCurveTo(hw * 0.04, L, hw * 0.3, L * 0.93, hw * 0.38, L * 0.79);
+  p.bezierCurveTo(hw * 0.47, L * 0.6, hw * 0.62, L * 0.4, hw * 0.87, L * 0.32);
+  p.bezierCurveTo(hw * 0.99, L * 0.285, hw, L * 0.24, hw, L * 0.18);
+  p.lineTo(hw, 0);
+  return p.getSpacedPoints(340);
+}
+function offsetPts(P, off) { return P.map((p, i) => { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)]; let tx = b.x - a.x, ty = b.y - a.y; const l = Math.hypot(tx, ty) || 1; tx /= l; ty /= l; return new THREE.Vector2(p.x + ty * off, p.y - tx * off); }); }
+const maxDepthAt = (P, x, tol = 0.03) => { let m = -1; for (const p of P) if (Math.abs(p.x - x) < tol && p.y > m) m = p.y; return m < 0 ? 0.5 : m; };
+const xRangeAt = (P, d, tol = 0.03) => { let a = 1e9, b = -1e9; for (const p of P) if (Math.abs(p.y - d) < tol) { a = Math.min(a, p.x); b = Math.max(b, p.x); } return [a, b]; };
+function flatMesh(pts, holes, depth, mat, name, parent, y) {
+  const s = new THREE.Shape(pts); (holes || []).forEach(h => s.holes.push(new THREE.Path(h)));
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false, curveSegments: 1 });
+  g.rotateX(-Math.PI / 2); const m = mesh(g, mat, name, parent, 0, y, 0); return m;
+}
+
+// ---------- data ----------
+const MAKERS = {
+  steinway: { name: 'Steinway & Sons', model: 'Model D-274', country: 'สหรัฐฯ / เยอรมนี', city: 'นิวยอร์ก & ฮัมบูร์ก', founded: 1853, L: 2.74, keys: 88, pedals: 3, legs: 'tapered', plate: 0xc29a48, weight: '≈480 กก.',
+    tone: { bright: 0.55, decay: 1.0, inharm: 1.0, rolloff: 1.1, detune: 1.3, reverb: 0.35 },
+    character: 'เสียงทรงพลัง กังวาน โอเวอร์โทนอุดม “ร้องเพลง” ได้ยาว — มาตรฐานของเวทีคอนเสิร์ตทั่วโลก',
+    tech: ['ขอบตัวแบบดัดต่อเนื่อง: ไม้เมเปิลแข็งอัดหลายชั้นถูกดัดพร้อมกันทั้งขอบในและขอบนอกเป็นชิ้นเดียว', 'ซาวด์บอร์ด Diaphragmatic — ไสให้บางลงจากกลางสู่ขอบ ให้แผ่นสั่นได้อิสระเหมือนไดอะแฟรมลำโพง', 'Duplex scaling — ปล่อยช่วงปลายสายที่ไม่ได้ตีให้สั่นพ้อง เพิ่มประกายให้เสียงแหลม'],
+    parts: { rim: 'Steinway ดัดขอบในและนอกพร้อมกันเป็นชิ้นเดียว ทำให้ตัวเครื่องแข็งและสะท้อนพลังงานกลับสู่ซาวด์บอร์ด', soundboard: 'Diaphragmatic soundboard: หนาตรงกลาง บางลงที่ขอบ', strings: 'Duplex scaling: ส่วนสายเกินบริดจ์ถูกคำนวณให้สั่นพ้องเป็นฮาร์มอนิก' } },
+  yamaha: { name: 'Yamaha', model: 'CFX', country: 'ญี่ปุ่น', city: 'ฮามามัตสึ', founded: 1887, L: 2.75, keys: 88, pedals: 3, legs: 'square', plate: 0xcaa452, weight: '≈490 กก.',
+    tone: { bright: 0.74, decay: 0.9, inharm: 0.8, rolloff: 1.0, detune: 0.8, reverb: 0.3 },
+    character: 'เสียงใส ชัด สม่ำเสมอทุกช่วงเสียง หัวเสียงคมและฉายไกลในฮอลล์ใหญ่',
+    tech: ['ผสานงานช่างฝีมือเข้ากับการควบคุมคุณภาพระดับอุตสาหกรรม แต่ละหลังจึงมีความสม่ำเสมอสูง', 'ขอบตัวหนาและแข็ง ช่วยกักพลังงานเสียงไว้ในซาวด์บอร์ด เสียงจึงยาวและชัด', 'ถูกเลือกใช้ในการแข่งขันระดับโลก เช่น International Chopin Piano Competition'],
+    parts: { action: 'วอยซิ่งค้อนเน้นหัวเสียงที่ชัด ตอบสนองสม่ำเสมอทุกคีย์', rim: 'ขอบตัวไม้หนาแข็งพิเศษ ลดการสูญเสียพลังงาน' } },
+  bosendorfer: { name: 'Bösendorfer', model: 'Imperial 290', country: 'ออสเตรีย', city: 'เวียนนา', founded: 1828, L: 2.90, keys: 97, pedals: 3, legs: 'round', plate: 0xb39150, weight: '≈550 กก.',
+    tone: { bright: 0.34, decay: 1.2, inharm: 0.9, rolloff: 1.35, detune: 1.6, reverb: 0.45 },
+    character: 'เสียงอบอุ่น ทุ้มลึก เบสหนักแน่นราวออร์เคสตรา สีเสียงเข้มและนุ่ม',
+    tech: ['97 คีย์ ลงถึงโน้ต C0 — คีย์ขาวส่วนเกิน 9 คีย์ทำเป็นสีเข้มเพื่อไม่ให้ผู้เล่นสับสน', 'ขอบตัวต่อจากไม้สปรูซเป็นท่อน (ไม่ใช่ไม้อัดดัดโค้ง) ให้ทั้งตัวเครื่องสั่นพ้องร่วมกับซาวด์บอร์ด', 'สายเบสพิเศษช่วยให้เกิดฮาร์มอนิกต่ำเพิ่มขึ้น แม้ไม่ได้กดคีย์ส่วนเกินเลย'],
+    parts: { rim: 'ขอบตัวไม้สปรูซต่อท่อน ทำหน้าที่เป็นตัวสั่นพ้อง (resonance case)', keys: '97 คีย์ คีย์ขาวส่วนเกิน C0–G#0 ทำสีเข้ม', strings: 'สายเบสเพิ่ม 9 โน้ต สั่นพ้องเสริมความลึกของเสียงต่ำ' } },
+  fazioli: { name: 'Fazioli', model: 'F308', country: 'อิตาลี', city: 'ซาชิเล', founded: 1981, L: 3.08, keys: 88, pedals: 4, legs: 'slim', plate: 0xd4b061, weight: '≈690 กก.',
+    tone: { bright: 0.7, decay: 1.28, inharm: 0.85, rolloff: 1.05, detune: 0.9, reverb: 0.42 },
+    character: 'เสียงโปร่ง สว่าง แยกแนวเสียงชัด ซัสเทนยาวมาก',
+    tech: ['ซาวด์บอร์ดไม้สปรูซแดงจากป่า Val di Fiemme — แหล่งไม้เดียวกับเครื่องสายชั้นครู', 'มี 4 แป้น: แป้นที่ 4 เลื่อนราวค้อนเข้าใกล้สาย ลดความดังโดยไม่เปลี่ยนสีเสียง', 'ยาว 3.08 ม. — หนึ่งในแกรนด์เปียโนรุ่นผลิตที่ยาวที่สุด ผลิตปีละราว 150 หลัง'],
+    parts: { soundboard: 'ไม้สปรูซแดงจาก Val di Fiemme คัดเฉพาะท่อนที่ลายไม้ถี่และสม่ำเสมอ', lyre: 'แป้นที่ 4 (ซ้ายสุด): ยกราวค้อนให้ใกล้สาย เบาลงแต่สีเสียงคงเดิม' } },
+  bechstein: { name: 'C. Bechstein', model: 'D 282', country: 'เยอรมนี', city: 'เบอร์ลิน', founded: 1853, L: 2.82, keys: 88, pedals: 3, legs: 'tapered', plate: 0xb89a55, weight: '≈500 กก.',
+    tone: { bright: 0.5, decay: 0.95, inharm: 0.95, rolloff: 1.2, detune: 1.0, reverb: 0.35 },
+    character: 'เสียงโปร่งใส แยกแนวเสียงชัด เป็นธรรมชาติ ไม่ฉูดฉาด',
+    tech: ['ฟรานซ์ ลิสต์ เป็นศิลปินคนสำคัญยุคแรกที่ใช้ Bechstein แสดงคอนเสิร์ต', 'เน้นความโปร่งใส (transparency) เหมาะกับดนตรีที่มีหลายแนวเสียงสอดประสาน', 'ประกอบด้วยมือในเยอรมนี ตามแนวทางช่างทำเปียโนยุโรปดั้งเดิม'],
+    parts: {} },
+};
+const ARTISTS = {
+  gould: { name: 'Glenn Gould', sub: 'แคนาดา · 1932–1982', maker: 'steinway', bench: 0.36, mod: { bright: 0.12, decay: 0.68, reverb: 0.1 }, text: 'ใช้ Steinway CD 318 ที่ปรับแอ็กชันให้เบาและตื้นพิเศษ นั่งเก้าอี้พับตัวเดิมที่เตี้ยมาก (≈36 ซม. — ดูเก้าอี้ในโมเดล) เล่นแยกพยางค์ คม ชัด โดยเฉพาะบาค · เดโมลดเสียงก้องและความยาวเสียง' },
+  horowitz: { name: 'Vladimir Horowitz', sub: 'รัสเซีย–สหรัฐฯ · 1903–1989', maker: 'steinway', mod: { bright: 0.28, decay: 1.0, reverb: 0.4 }, text: 'ออกทัวร์พร้อมเปียโนส่วนตัว Steinway CD 503 ที่ช่างปรับให้เสียงสว่างจัดและแอ็กชันเบามาก รองรับไดนามิกตั้งแต่แผ่วสุดถึงกึกก้อง' },
+  richter: { name: 'Sviatoslav Richter', sub: 'โซเวียต · 1915–1997', maker: 'yamaha', mod: { bright: -0.06, decay: 1.05, reverb: 0.38 }, text: 'ช่วงหลังของชีวิตการแสดงเป็นที่รู้จักว่าเลือกเล่น Yamaha บ่อยครั้ง ชื่นชอบการควบคุมเสียงเบา (pianissimo) ได้อย่างละเอียด' },
+  hewitt: { name: 'Angela Hewitt', sub: 'แคนาดา · เกิด 1958', maker: 'fazioli', mod: { bright: 0, decay: 1.0, reverb: 0.36 }, text: 'ผู้สนับสนุน Fazioli คนสำคัญ บันทึกเสียงผลงานบาคจำนวนมากด้วย Fazioli ชื่นชมความใสและการแยกแนวเสียงที่ชัดเจน' },
+  peterson: { name: 'Oscar Peterson', sub: 'แคนาดา · 1925–2007', maker: 'bosendorfer', mod: { bright: 0.1, decay: 0.9, reverb: 0.3 }, text: 'นักเปียโนแจ๊สที่ผูกพันกับ Bösendorfer Imperial เบสที่หนักแน่นรองรับไลน์มือซ้ายและคอร์ดใหญ่อันเป็นเอกลักษณ์' },
+};
+const GRAND_PARTS = {
+  lid: ['ฝาเปียโน', 'Lid', 'สะท้อนเสียงจากสายและซาวด์บอร์ดออกไปทางผู้ฟัง ไม้ค้ำปรับได้หลายระดับเพื่อคุมการฉายเสียง'],
+  desk: ['ที่วางโน้ต', 'Music desk', 'แท่นวางโน้ตเลื่อนเข้า-ออกได้ ถอดออกได้เมื่อบันทึกเสียงเพื่อไม่ให้บังเสียง'],
+  dampers: ['แดมเปอร์', 'Dampers', 'ก้อนสักหลาดกดทับสายไว้ กดคีย์แล้วแดมเปอร์โน้ตนั้นยกขึ้น ปล่อยคีย์จึงลงมาหยุดเสียง · โน้ตช่วงสูงสุดไม่มีแดมเปอร์เพราะเสียงดับเร็วเอง · กด Space แล้วดูแดมเปอร์ยกทั้งแถว'],
+  strings: ['สายเปียโน', 'Strings', 'ราว 230 เส้น แรงตึงรวมเกือบ 20 ตัน · ช่วงต่ำใช้สายเดี่ยวพันลวดทองแดง ช่วงกลาง 2 เส้น ช่วงสูง 3 เส้นต่อโน้ต (unison) · ค้อนตีที่ราว 1/8 ของความยาวสาย ลดฮาร์มอนิกที่ไม่กลมกลืน'],
+  plate: ['โครงเหล็กหล่อ', 'Cast-iron plate', 'รับแรงดึงสายทั้งหมด ทำให้ใช้สายตึงสูงและเสียงดังกว่าเปียโนโครงไม้ในอดีต · หล่อในแม่พิมพ์ทรายแล้วพ่นสีทอง'],
+  pinblock: ['บล็อกหมุด & หมุดตั้งเสียง', 'Pinblock', 'ไม้เมเปิลอัดหลายชั้นสลับทิศลายไม้ ยึดหมุดด้วยแรงเสียดทาน ช่างจูนหมุนหมุดทีละน้อยเพื่อปรับระดับเสียง'],
+  soundboard: ['ซาวด์บอร์ด', 'Soundboard', 'แผ่นไม้สปรูซบางราว 6–9 มม. คือ “ลำโพง” ของเปียโน · บริดจ์ส่งแรงสั่นจากสายลงแผ่น · ซี่โครงด้านล่างวางขวางลายไม้และดันแผ่นให้โค้งนูน (crown) ต้านแรงกดของสาย'],
+  action: ['กลไกแอ็กชัน & ค้อน', 'Action', 'คีย์ละหลายสิบชิ้น · ระบบ double escapement (Sébastien Érard, 1821) ให้ค้อนพร้อมตีซ้ำก่อนคีย์เด้งกลับสุด แกรนด์จึงรัวโน้ตเร็วกว่าเปียโนตั้ง · หัวค้อนหุ้มสักหลาดขนแกะอัดแน่น'],
+  keys: ['คีย์บอร์ด', 'Keys', 'แต่ละคีย์คือคานงัดยาวราว 45 ซม. ส่วนที่มองเห็นเป็นแค่ปลายหน้า · กดคีย์แล้วปลายหลังยกกลไกค้อนขึ้น (ดูได้เมื่อแยกชิ้นส่วน)'],
+  rim: ['ขอบตัว & โครงใต้', 'Rim, keybed & braces', 'โครงสร้างหลักที่รับน้ำหนักและสะท้อนพลังงานเสียง รูปทรงโค้งเกิดจากความยาวสายที่ลดหลั่นจากเบสสู่เสียงแหลม'],
+  legs: ['ขา & ล้อ', 'Legs & casters', 'ขาสามขารับน้ำหนักราวครึ่งตัน ล้อทองเหลืองช่วยเคลื่อนย้ายบนเวที'],
+  lyre: ['ไลร์ & แป้นเหยียบ', 'Lyre & pedals', 'ซ้าย Una corda: เลื่อนแอ็กชันให้ค้อนตีสายน้อยลง เสียงนุ่มเบา · กลาง Sostenuto: ค้างเฉพาะโน้ตที่กดอยู่ · ขวา Damper: ยกแดมเปอร์ทั้งหมด เสียงค้างและสายอื่นสั่นพ้อง · คลิกที่แป้นในโมเดลเพื่อลอง'],
+  bench: ['เก้าอี้เปียโน', 'Bench', 'ความสูงมีผลต่อน้ำหนักแขนและเทคนิค — เลือกสไตล์ Glenn Gould เพื่อดูเก้าอี้เตี้ยอันโด่งดัง'],
+};
+const EP_PARTS = {
+  ep_cover: ['ฝาครอบฮาร์ป', 'Harp cover', 'ฝาพลาสติกครอบชุดกำเนิดเสียง ไม่มีหน้าที่ด้านเสียงเหมือนฝาแกรนด์ เพราะเสียงออกทางลำโพง'],
+  ep_harp: ['ไทน์ & โทนบาร์', 'Tines & tone bars', 'แต่ละโน้ตมี “ไทน์” แท่งเหล็กเส้นเล็กคู่กับ “โทนบาร์” ทองเหลือง ทำงานคล้ายส้อมเสียงแบบไม่สมมาตร ความยาวไทน์กำหนดระดับเสียง จูนด้วยการเลื่อนสปริงถ่วงบนไทน์'],
+  ep_pickups: ['ปิกอัพแม่เหล็ก', 'Pickups', 'ขดลวดรอบแม่เหล็กหน้าปลายไทน์ เปลี่ยนการสั่นเป็นสัญญาณไฟฟ้า ระยะปลายไทน์กับปิกอัพกำหนดสีเสียง — ใกล้ขึ้นได้เสียง “bark” ดุดัน'],
+  ep_hammers: ['ค้อนปลายยาง', 'Hammers', 'ค้อนพลาสติกปลายยางนีโอพรีนตีไทน์จากด้านล่าง กลไกง่ายกว่าแกรนด์มาก ไม่มี escapement ซับซ้อน'],
+  ep_keys: ['คีย์ 73 คีย์', 'Keys E1–E7', 'ช่วงเสียงแคบกว่าแกรนด์ (73 จาก 88) น้ำหนักคีย์หนักกว่าเปียโนดิจิทัลเพราะยังเป็นกลไกจริง'],
+  ep_case: ['ตัวกล่อง & ปุ่มควบคุม', 'Case & controls', 'ไม่มีซาวด์บอร์ด — ตัวเครื่องเกือบเงียบเมื่อไม่ต่อแอมป์ ปุ่มด้านซ้ายคุมความดังและเสียงทุ้ม'],
+  ep_legs: ['ขาตั้ง', 'Legs', 'ขาโครเมียมถอดได้ ทำให้พกไปเล่นบนเวทีได้'],
+  ep_pedal: ['แป้นซัสเทน', 'Sustain pedal', 'ยกแถบแดมเปอร์สักหลาดออกจากไทน์ทั้งหมด เหมือนแป้นขวาของแกรนด์'],
+};
+const EP_INFO = { name: 'เปียโนไฟฟ้าแบบไทน์', model: 'Stage 73 (ต้นแบบทั่วไป)', tech: ['เสียงเกิดจากค้อนยางตีแท่งไทน์ แล้วปิกอัพแม่เหล็กแปลงเป็นสัญญาณไฟฟ้า → แอมป์', 'เสียงหวาน กลม มีประกายคล้ายระฆัง ยิ่งกดแรงยิ่ง “bark” — นิยมมากในโซล แจ๊ส ฟิวชัน และป๊อปยุค 70', 'ต่างจากเปียโนดิจิทัล: ดิจิทัลไม่มีสิ่งใดสั่นจริง ใช้เซนเซอร์อ่านความเร็วคีย์แล้วเล่นเสียงสุ่มตัวอย่างหรือแบบจำลอง'] };
+
+// ---------- state ----------
+const S = { inst: 'grand', maker: 'steinway', artist: null, explode: 0, explodeT: 0, vel: 0.75, reverb: 0.35, fx: true, sustain: false, una: false, half: false, sost: false, trem: false, octave: 60, sel: null, tab: 'model' };
+const root = new THREE.Group(); root.name = 'ConcertGrandStudio';
+let G = null, EP = null; // {group, parts, keys:Map, ...}
+
+// ---------- build grand ----------
+function buildGrand(id, artist) {
+  const mk = MAKERS[id]; const L = mk.L;
+  const lo = mk.keys === 97 ? 12 : 21, hi = 108; const lay = layout(lo, hi);
+  const kbW = lay.W, hw = kbW / 2 + 0.17, Y0 = 0.6, YT = 0.98;
+  mats.plate.color.setHex(mk.plate);
+  const g = new THREE.Group(); g.name = 'Grand_' + mk.name.replace(/[^\w]+/g, '_');
+  const parts = {}; const part = (key, off) => { const grp = new THREE.Group(); grp.name = key; g.add(grp); parts[key] = { group: grp, off: new THREE.Vector3(...off), base: new THREE.Vector3(), info: GRAND_PARTS[key] }; return grp; };
+  const P = outline(L, hw), Pin = offsetPts(P, 0.13);
+
+  // rim / keybed
+  const rim = part('rim', [0, 0, 0]);
+  flatMesh([...P, ...offsetPts(P, 0.055).reverse()], null, YT - Y0, mats.ebony, 'rim', rim, Y0);
+  mesh(boxG(2 * hw, 0.1, 0.2), mats.ebony, 'keybed', rim, 0, 0.655, 0.1);
+  mesh(boxG(2 * hw - 0.12, 0.03, 0.3), mats.caseWood, 'keyframe', rim, 0, 0.62, -0.15);
+  mesh(boxG(kbW + 0.006, 0.04, 0.014), mats.ebony, 'key_slip', rim, 0, 0.705, 0.179);
+  const cw = hw - kbW / 2 - 0.002;
+  [-1, 1].forEach(s => mesh(boxG(cw, 0.09, 0.22), mats.ebony, s < 0 ? 'cheek_bass' : 'cheek_treble', rim, s * (kbW / 2 + 0.002 + cw / 2), 0.75, 0.09));
+  mesh(boxG(kbW + 0.004, 0.08, 0.035), mats.ebony, 'fallboard', rim, 0, 0.79, -0.02);
+  const braces = [];
+  [-0.55, -0.05, 0.35].forEach(f => { const x = hw * f, d1 = maxDepthAt(Pin, x) - 0.02; braces.push(boxAt(0.06, 0.07, d1 - 0.3, x, 0.64, -(0.3 + d1) / 2)); });
+  mesh(merge(braces), mats.caseWood, 'belly_braces', rim);
+
+  // soundboard
+  const sb = part('soundboard', [0, 0.38, 0]);
+  const Psb = offsetPts(P, 0.057).filter(p => p.y >= 0.36);
+  flatMesh(Psb, null, 0.009, mats.spruce, 'soundboard', sb, 0.755);
+  const ribs = []; for (let d = 0.5; d < L - 0.22; d += 0.16) { const [a, b] = xRangeAt(Psb, d); if (b - a > 0.1) ribs.push(boxAt(b - a - 0.03, 0.018, 0.022, (a + b) / 2, 0.744, -d)); }
+  mesh(merge(ribs), mats.spruce, 'ribs', sb);
+
+  // pinblock
+  const pb = part('pinblock', [0, 0.55, 0.28]);
+  mesh(boxG(2 * hw - 0.12, 0.045, 0.18), mats.maple, 'pinblock', pb, 0, 0.7525, -0.15);
+
+  // plate
+  const pl = part('plate', [0, 0.8, 0]);
+  flatMesh(offsetPts(P, 0.06).filter(p => p.y >= 0.06), [Pin.filter(p => p.y >= 0.27)], 0.018, mats.plate, 'plate', pl, 0.778);
+  const struts = [];
+  [0.18, 0.4, 0.6, 0.8].forEach(k => { const xa = -hw + 0.14 + k * (2 * hw - 0.3), xb = xa - 0.18 * k - 0.05, d1 = maxDepthAt(Pin, xb) - 0.06; const a = new THREE.Vector3(xa, 0.835, -0.3), b = new THREE.Vector3(xb, 0.835, -d1); const len = a.distanceTo(b); struts.push(boxAt(0.035, 0.03, len, (xa + xb) / 2, 0.835, -(0.3 + d1) / 2, 0, Math.atan2(xb - xa, -(d1 - 0.3)), 0)); });
+  mesh(merge(struts), mats.plate, 'plate_struts', pl);
+
+  // strings, pins, bridge
+  const st = part('strings', [0, 1.05, 0]);
+  const steel = [], copper = [], pins = [], bridge = [];
+  const N = lay.list.length, sx = i => -(hw - 0.11) + (i + 0.5) / N * 2 * (hw - 0.11);
+  const strData = [];
+  lay.list.forEach((k, i) => {
+    const x = sx(i), uni = k.m < 31 ? 1 : k.m < 49 ? 2 : 3, bass = k.m < 49, y = bass ? 0.81 : 0.803;
+    const d0 = 0.11, d1 = maxDepthAt(Pin, x) - 0.03;
+    for (let u = 0; u < uni; u++) {
+      const ux = x + (u - (uni - 1) / 2) * 0.0034;
+      (bass ? copper : steel).push(boxAt(bass ? 0.0024 : 0.0011, bass ? 0.0024 : 0.0011, d1 - d0, ux, y, -(d0 + d1) / 2));
+      pins.push(xf(new THREE.CylinderGeometry(0.0032, 0.0032, 0.06, 8), ux, 0.795, -(0.08 + ((i + u) % 3) * 0.02)));
+    }
+    bridge.push(boxAt(0.016, 0.04, 0.014, x, 0.784, -(d1 - 0.04)));
+    strData.push({ x, y, d0, d1 });
+  });
+  mesh(merge(steel), mats.steel, 'strings_steel', st);
+  mesh(merge(copper), mats.copper, 'strings_bass_wound', st);
+  mesh(merge(pins), mats.steel, 'tuning_pins', pb);
+  mesh(merge(bridge), mats.maple, 'bridge', sb);
+
+  // dampers
+  const dp = part('dampers', [0, 1.28, 0]);
+  // action
+  const ac = part('action', [0, 0.12, 0.55]);
+  mesh(boxG(2 * hw - 0.14, 0.025, 0.04), mats.maple, 'action_rail', ac, 0, 0.705, -0.17);
+  const shankG = boxAt(0.005, 0.005, 0.14, 0, 0, -0.07), headG = boxAt(0.011, 0.03, 0.022, 0, 0.017, -0.14), damperG = boxG(0.011, 0.03, 0.035);
+  // keys
+  const kg = part('keys', [0, 0, 0.85]);
+  const keys = new Map();
+  lay.list.forEach((k, i) => {
+    const x = keyX(k, kbW);
+    const mat = k.black ? mats.keyBlack : (k.m < 21 ? mats.keyExt : mats.ivory);
+    const km = mesh(k.black ? blackGeo : whiteGeo, mat, 'key_' + noteName(k.m).replace('#', 's'), kg, x, 0.73, 0.02);
+    const hp = new THREE.Group(); hp.name = 'hammer_' + noteName(k.m).replace('#', 's'); hp.position.set(sx(i), 0.72, -0.17); ac.add(hp);
+    mesh(shankG, mats.maple, hp.name + '_shank', hp); mesh(headG, mats.felt, hp.name + '_head', hp);
+    let dmp = null; if (k.m <= 88) dmp = mesh(damperG, mats.maple, 'damper_' + noteName(k.m).replace('#', 's'), dp, sx(i), 0.825, -0.4);
+    const sd = strData[i];
+    const ks = { inst: 'grand', m: k.m, mesh: km, hammer: hp, damper: dmp, down: 0, ht: -1, rot: 0, sGroup: st, s0: new THREE.Vector3(sd.x, sd.y, -sd.d0), s1: new THREE.Vector3(sd.x, sd.y, -sd.d1), strike: new THREE.Vector3(sd.x, sd.y, -0.31) };
+    km.userData.key = ks; keys.set(k.m, ks);
+  });
+
+  // lid + prop
+  const ld = part('lid', [0, 1.6, 0]);
+  const a = 0.42, pivot = new THREE.Group(); pivot.name = 'lid_hinge'; pivot.position.set(-hw, YT + 0.001, 0); pivot.rotation.z = a; ld.add(pivot);
+  flatMesh(P.filter(p => p.y >= 0.3).map(p => new THREE.Vector2(p.x + hw, p.y)), null, 0.02, mats.ebony, 'lid', pivot, 0);
+  const dpp = L * 0.42, [, rx] = xRangeAt(P, dpp), px = rx - 0.08, xl = px + hw;
+  mesh(cylBetween(new THREE.Vector3(px, YT, -dpp), new THREE.Vector3(-hw + xl * Math.cos(a), YT + xl * Math.sin(a), -dpp), 0.011), mats.ebony, 'lid_prop', ld);
+  // desk
+  const dk = part('desk', [0, 1.3, 0.35]);
+  const dg = new THREE.Group(); dg.name = 'desk_tilt'; dg.position.set(0, YT - 0.06, -0.36); dg.rotation.x = -0.3; dk.add(dg);
+  mesh(boxG(0.72, 0.2, 0.014), mats.ebony, 'music_desk', dg, 0, 0.11, 0);
+  mesh(boxG(0.72, 0.018, 0.045), mats.ebony, 'desk_ledge', dg, 0, 0.01, 0.022);
+
+  // legs
+  const lg = part('legs', [0, 0, 0]);
+  const legPos = [[-hw + 0.1, -0.14], [hw - 0.1, -0.14], [-hw * 0.2, -L * 0.86]], h = Y0 - 0.06;
+  legPos.forEach(([x, z], i) => {
+    let geo;
+    if (mk.legs === 'tapered') geo = xf(new THREE.CylinderGeometry(0.075, 0.05, h, 4), 0, 0, 0, 0, Math.PI / 4, 0);
+    else if (mk.legs === 'round') geo = merge([new THREE.CylinderGeometry(0.058, 0.044, h, 32), xf(new THREE.TorusGeometry(0.06, 0.012, 10, 32), 0, h / 2 - 0.05, 0, Math.PI / 2, 0, 0)]);
+    else if (mk.legs === 'slim') geo = boxG(0.05, h, 0.11);
+    else geo = boxG(0.095, h, 0.095);
+    mesh(geo, mats.ebony, 'leg_' + i, lg, x, 0.06 + h / 2, z);
+    mesh(xf(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 24), 0, 0, 0, 0, 0, Math.PI / 2), mats.brass, 'caster_' + i, lg, x, 0.03, z);
+  });
+  // lyre + pedals
+  const ly = part('lyre', [0, 0, 0.6]);
+  [-1, 1].forEach(s => mesh(boxG(0.03, 0.48, 0.03), mats.ebony, 'lyre_post', ly, s * 0.085, 0.35, -0.27));
+  mesh(boxG(0.24, 0.05, 0.07), mats.ebony, 'lyre_top', ly, 0, 0.585, -0.27);
+  mesh(boxG(0.36, 0.07, 0.09), mats.ebony, 'pedal_box', ly, 0, 0.075, -0.27);
+  const pedalTypes = mk.pedals === 4 ? ['half', 'una', 'sost', 'damper'] : ['una', 'sost', 'damper'];
+  const pedalG = boxAt(0.03, 0.012, 0.13, 0, 0, 0.065); const pedals = [];
+  pedalTypes.forEach((t, j) => { const pm = mesh(pedalG, mats.brass, 'pedal_' + t, ly, (j - (pedalTypes.length - 1) / 2) * (mk.pedals === 4 ? 0.07 : 0.085), 0.075, -0.225); pm.userData.pedal = t; pedals.push(pm); });
+  // bench
+  const bn = part('bench', [0, 0, 0.5]);
+  const bh = (artist && ARTISTS[artist].bench) || 0.49;
+  mesh(boxG(0.76, 0.07, 0.36), mats.leather, 'bench_seat', bn, 0, bh - 0.035, 0.66);
+  mesh(boxG(0.78, 0.05, 0.38), mats.ebony, 'bench_frame', bn, 0, bh - 0.095, 0.66);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx2, sz]) => mesh(boxG(0.045, bh - 0.12, 0.045), mats.ebony, 'bench_leg', bn, sx2 * 0.34, (bh - 0.12) / 2, 0.66 + sz * 0.14));
+
+  Object.values(parts).forEach(p => p.base.copy(p.group.position));
+  return { group: g, parts, keys, pedals, hw, L, lo, hi };
+}
+
+// ---------- build electric piano ----------
+function buildEP() {
+  const lay = layout(28, 100), kbW = lay.W, W = kbW + 0.12, D = 0.56;
+  const g = new THREE.Group(); g.name = 'ElectricPiano_Tine73';
+  const parts = {}; const part = (key, off) => { const grp = new THREE.Group(); grp.name = key; g.add(grp); parts[key] = { group: grp, off: new THREE.Vector3(...off), base: new THREE.Vector3(), info: EP_PARTS[key] }; return grp; };
+  const cs = part('ep_case', [0, 0, 0]);
+  mesh(boxG(W, 0.13, D), mats.tolex, 'ep_shell', cs, 0, 0.645, 0);
+  [-1, 1].forEach(s => mesh(boxG(0.06, 0.09, D), mats.tolex, 'ep_cheek', cs, s * (W / 2 - 0.03), 0.755, 0));
+  mesh(boxG(W - 0.12, 0.09, 0.04), mats.tolex, 'ep_back_rail', cs, 0, 0.755, -D / 2 + 0.02);
+  mesh(boxG(W - 0.118, 0.024, 0.012), mats.alu, 'ep_front_rail', cs, 0, 0.697, D / 2 + 0.002);
+  [0.08, 0.15].forEach((z, i) => mesh(new THREE.CylinderGeometry(0.012, 0.013, 0.018, 24), mats.chrome, i ? 'knob_bass' : 'knob_volume', cs, -(W / 2 - 0.03), 0.809, D / 2 - z));
+  const cv = part('ep_cover', [0, 0.5, 0]);
+  mesh(boxG(W - 0.12, 0.022, 0.35), mats.plastic, 'harp_cover', cv, 0, 0.811, -0.065);
+  mesh(boxG(W - 0.12, 0.05, 0.012), mats.alu, 'name_rail', cv, 0, 0.79, 0.11);
+  const hp = part('ep_harp', [0, 0.3, 0]), pu = part('ep_pickups', [0, 0.17, 0.14]), hm = part('ep_hammers', [0, 0.07, 0]), kg = part('ep_keys', [0, 0, 0.45]);
+  const zb = -0.2, tines = [], bars = [], picks = [], keys = new Map();
+  mesh(boxG(W - 0.14, 0.02, 0.03), mats.alu, 'harp_rail_back', hp, 0, 0.785, zb - 0.015);
+  mesh(boxG(W - 0.14, 0.012, 0.02), mats.alu, 'pickup_rail', pu, 0, 0.76, 0.02);
+  const hammerG = boxAt(0.011, 0.02, 0.02, 0, 0, 0);
+  lay.list.forEach((k, i) => {
+    const x = keyX(k, kbW), len = 0.04 + 0.12 * Math.pow(1 - i / 72, 1.2), tip = zb + len;
+    tines.push(xf(new THREE.CylinderGeometry(0.0011, 0.0011, len, 6), x, 0.775, zb + len / 2, Math.PI / 2, 0, 0));
+    bars.push(boxAt(0.006, 0.005, len * 0.8, x, 0.787, zb + len * 0.4));
+    picks.push(xf(new THREE.CylinderGeometry(0.0036, 0.0036, 0.014, 10), x, 0.775, tip + 0.009, Math.PI / 2, 0, 0));
+    const km = mesh(k.black ? epBlackGeo : epWhiteGeo, k.black ? mats.keyBlack : mats.ivory, 'ep_key_' + noteName(k.m).replace('#', 's'), kg, x, 0.73, D / 2 - 0.165);
+    const ham = mesh(hammerG, mats.rubber, 'ep_hammer_' + noteName(k.m).replace('#', 's'), hm, x, 0.755, zb + len * 0.55);
+    const ks = { inst: 'ep', m: k.m, mesh: km, hammer: ham, hy: 0.755, down: 0, ht: -1, rot: 0, sGroup: hp, s0: new THREE.Vector3(x, 0.775, zb), s1: new THREE.Vector3(x, 0.775, tip), strike: new THREE.Vector3(x, 0.775, tip) };
+    km.userData.key = ks; keys.set(k.m, ks);
+  });
+  mesh(merge(tines), mats.tine, 'tines', hp); mesh(merge(bars), mats.brass, 'tone_bars', hp); mesh(merge(picks), mats.coil, 'pickups', pu);
+  const lg = part('ep_legs', [0, 0, 0]);
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.565, 16), mats.chrome, 'ep_leg', lg, sx * (W / 2 - 0.08), 0.0075 + 0.29, sz * (D / 2 - 0.07)); mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.015, 16), mats.rubber, 'ep_foot', lg, sx * (W / 2 - 0.08), 0.0075, sz * (D / 2 - 0.07)); });
+  const pd = part('ep_pedal', [0, 0, 0.25]);
+  mesh(boxG(0.14, 0.022, 0.22), mats.rubber, 'ep_pedal_base', pd, 0, 0.011, D / 2 + 0.3);
+  const pp = mesh(boxAt(0.09, 0.012, 0.17, 0, 0, 0.085), mats.chrome, 'ep_pedal_plate', pd, 0, 0.03, D / 2 + 0.2); pp.rotation.x = -0.1; pp.userData.pedal = 'damper'; pp.userData.rest = -0.1;
+  Object.values(parts).forEach(p => p.base.copy(p.group.position));
+  return { group: g, parts, keys, pedals: [pp], W, D };
+}
+
+function tagParts(I) { Object.entries(I.parts).forEach(([k, p]) => p.group.traverse(o => { if (o.isMesh) { o.userData.part = k; o.userData.inst = I; o.castShadow = o.receiveShadow = true; } })); }
+function placeEP() { EP.group.position.x = G.hw + 0.95 + EP.W / 2; EP.group.position.z = 0.08; }
+function rebuildGrand() {
+  if (G) { root.remove(G.group); G.keys.forEach(k => releaseAll()); }
+  G = buildGrand(S.maker, S.artist); tagParts(G); root.add(G.group);
+  if (EP) placeEP();
+  if (S.sel && S.sel.inst === 'grand') S.sel = null;
+  allKeyMeshes = [...G.keys.values(), ...EP.keys.values()].map(k => k.mesh);
+}
+let allKeyMeshes = [];
+EP = buildEP(); tagParts(EP); root.add(EP.group);
+rebuildGrand();
+stage.setObject(root);
+const VIEW0 = { pos: new THREE.Vector3(2.9, 2.2, 3.3), tgt: new THREE.Vector3(1.0, 0.72, -0.7) };
+camera.position.copy(VIEW0.pos); controls.target.copy(VIEW0.tgt); controls.update();
+
+// ---------- audio ----------
+let ctx, master, revSend, analyser, epBus, tremDepth, noiseBuf; const voices = new Map();
+function makeIR(sec) { const r = ctx.sampleRate, n = r * sec, b = ctx.createBuffer(2, n, r); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.2) * (i < r * 0.01 ? i / (r * 0.01) : 1); } return b; }
+function ensureAudio() {
+  if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = 0.7;
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 3;
+  analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.78;
+  master.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination);
+  const rev = ctx.createConvolver(); rev.buffer = makeIR(3.2); revSend = ctx.createGain(); revSend.gain.value = S.reverb; revSend.connect(rev); rev.connect(master);
+  epBus = ctx.createGain(); epBus.gain.value = 0.9; epBus.connect(master); epBus.connect(revSend);
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 5.2; tremDepth = ctx.createGain(); tremDepth.gain.value = 0; lfo.connect(tremDepth); tremDepth.connect(epBus.gain); lfo.start();
+  noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+}
+function tone() { const mk = MAKERS[S.maker].tone, a = S.artist ? ARTISTS[S.artist].mod : null; return { ...mk, bright: clamp(mk.bright + (a ? a.bright : 0)), decay: mk.decay * (a ? a.decay : 1) }; }
+function pianoVoice(m, vel) {
+  const t = ctx.currentTime, f = freqOf(m), T = tone();
+  const bright = clamp(T.bright - (S.una ? 0.25 : 0)); vel *= S.una ? 0.7 : 1; vel *= S.half ? 0.75 : 1;
+  const out = ctx.createGain(); out.gain.value = 1;
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 0.4;
+  const fc = Math.min(18000, f * (2 + 16 * bright * vel) + 500);
+  lp.frequency.setValueAtTime(fc, t); lp.frequency.setTargetAtTime(Math.max(f * 1.6, fc * 0.3), t + 0.02, 0.7 * T.decay);
+  lp.connect(out); out.connect(master); out.connect(revSend);
+  const base = clamp(3.4 * Math.pow(261.6 / f, 0.55) * T.decay, 0.35, 16);
+  const B = 0.00004 * T.inharm * Math.pow(2, (m - 21) / 22);
+  const oscs = [];
+  for (let n = 1; n <= 10; n++) {
+    const fn = n * f * Math.sqrt(1 + B * n * n); if (fn > 15000) break;
+    let amp = vel * 0.3 / Math.pow(n, T.rolloff) * (n === 1 ? 1 : 0.55 + 0.7 * bright); if (n % 8 === 0) amp *= 0.2;
+    if (m < 40 && n === 1) amp *= 0.6;
+    const reps = n <= 3 ? 2 : 1;
+    for (let r = 0; r < reps; r++) {
+      const o = ctx.createOscillator(); o.frequency.value = fn; o.detune.value = reps > 1 ? (r ? 1 : -1) * T.detune * 0.5 : 0;
+      const gn = ctx.createGain(), pk = amp / reps, dn = base / (1 + 0.45 * (n - 1));
+      gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(pk, t + 0.004);
+      gn.gain.setTargetAtTime(pk * 0.32, t + 0.005, dn * 0.12); gn.gain.setTargetAtTime(0, t + 0.005 + dn * 0.25, dn * 0.5);
+      o.connect(gn); gn.connect(lp); o.start(t); o.stop(t + Math.min(base * 3.5, 40)); oscs.push(o);
+    }
+  }
+  const ns = ctx.createBufferSource(); ns.buffer = noiseBuf; const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = Math.min(9000, f * 3); bp.Q.value = 0.9;
+  const ng = ctx.createGain(); ng.gain.setValueAtTime(vel * 0.12 * (0.4 + bright), t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start(t); ns.stop(t + 0.1);
+  return { out, oscs, rel: m > 88 ? base * 0.4 : 0.09 };
+}
+function epVoice(m, vel) {
+  const t = ctx.currentTime, f = freqOf(m);
+  const out = ctx.createGain(); out.gain.value = 1; out.connect(epBus);
+  const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain(), ag = ctx.createGain();
+  car.frequency.value = f; mod.frequency.value = f; const idx = 0.6 + vel * 4.5;
+  mg.gain.setValueAtTime(f * idx, t); mg.gain.setTargetAtTime(f * 0.35, t + 0.005, 0.28);
+  mod.connect(mg); mg.connect(car.frequency);
+  const dec = clamp(2.2 * Math.pow(261.6 / f, 0.4), 0.5, 6), pk = vel * 0.32;
+  ag.gain.setValueAtTime(0, t); ag.gain.linearRampToValueAtTime(pk, t + 0.003); ag.gain.setTargetAtTime(pk * 0.4, t + 0.004, 0.25); ag.gain.setTargetAtTime(0, t + 0.3, dec);
+  car.connect(ag); ag.connect(out);
+  const bell = ctx.createOscillator(), bg = ctx.createGain(); bell.frequency.value = Math.min(f * 7.03, 14000);
+  bg.gain.setValueAtTime(vel * 0.05, t); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.12); bell.connect(bg); bg.connect(out);
+  [car, mod, bell].forEach(o => { o.start(t); o.stop(t + dec * 4 + 0.5); });
+  return { out, oscs: [car, mod, bell], rel: 0.07 };
+}
+function stopVoice(v, rt) { if (!v) return; const t = ctx.currentTime; const gp = v.out.gain; gp.cancelScheduledValues(t); gp.setValueAtTime(gp.value, t); gp.setTargetAtTime(0, t, rt); v.oscs.forEach(o => { try { o.stop(t + rt * 8 + 0.05); } catch (e) { } }); }
+const held = new Map(); // id -> ks
+const sostSet = new Set();
+function noteOn(ks, vel = S.vel) {
+  ensureAudio(); const id = ks.inst + ':' + ks.m;
+  if (voices.has(id)) stopVoice(voices.get(id).v, 0.03);
+  const v = ks.inst === 'grand' ? pianoVoice(ks.m, vel) : epVoice(ks.m, vel);
+  voices.set(id, { v, ks, sustained: false }); held.set(id, ks);
+  if (voices.size > 48) { const [fid, fv] = voices.entries().next().value; stopVoice(fv.v, 0.05); voices.delete(fid); }
+  ks.down = 1; ks.ht = 0; spawnFx(ks, vel); showNote(ks);
+}
+function noteOff(ks) {
+  const id = ks.inst + ':' + ks.m; held.delete(id); ks.down = 0;
+  const e = voices.get(id); if (!e) return;
+  if (S.sustain || (ks.inst === 'grand' && sostSet.has(id))) { e.sustained = true; return; }
+  stopVoice(e.v, e.v.rel); voices.delete(id);
+}
+function releaseSustained() { for (const [id, e] of [...voices]) { if (!held.has(id) && !sostSet.has(id)) { stopVoice(e.v, e.v.rel); voices.delete(id); } } }
+function releaseAll() { held.clear(); }
+function setSustain(on) { S.sustain = on; if (!on) releaseSustained(); syncToggles(); }
+function setSost(on) { S.sost = on; sostSet.clear(); if (on) held.forEach((k, id) => k.inst === 'grand' && sostSet.add(id)); else releaseSustained(); syncToggles(); }
+
+// ---------- FX ----------
+const fxGroup = new THREE.Group(); scene.add(fxGroup); const fx = [];
+const unitBox = new THREE.BoxGeometry(1, 1, 1), ringG = new THREE.TorusGeometry(1, 0.05, 8, 64); const texCache = {};
+function labelTex(txt) { if (texCache[txt]) return texCache[txt]; const c = document.createElement('canvas'); c.width = 192; c.height = 96; const x = c.getContext('2d'); x.font = '500 54px "IBM Plex Mono", monospace'; x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, 96, 50); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return texCache[txt] = t; }
+const pitchColor = m => new THREE.Color().setHSL(((m % 12) * 7 % 12) / 12, 0.78, 0.62);
+function spawnFx(ks, vel) {
+  if (!S.fx) return; const col = pitchColor(ks.m);
+  const a = ks.sGroup.localToWorld(ks.s0.clone()), b = ks.sGroup.localToWorld(ks.s1.clone()), s = ks.sGroup.localToWorld(ks.strike.clone());
+  const add = (o, d) => { fxGroup.add(o); fx.push(Object.assign({ o, t: 0 }, d)); };
+  const sm = new THREE.Mesh(unitBox, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sm.position.copy(a).add(b).multiplyScalar(0.5); sm.scale.set(0.005, 0.004, a.distanceTo(b) + 0.002);
+  add(sm, { type: 'str', life: ks.inst === 'grand' ? 1.8 : 1.1, sx: 0.005 });
+  const rg = new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  rg.rotation.x = Math.PI / 2; rg.position.copy(s); add(rg, { type: 'ring', life: 1.1, y0: s.y, k: 0.5 + vel });
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: labelTex(noteName(ks.m)), color: col, transparent: true, depthWrite: false, depthTest: false }));
+  sp.position.copy(s); sp.position.y += 0.06; sp.scale.set(0.12, 0.06, 1); add(sp, { type: 'lbl', life: 1.4, y0: s.y + 0.06 });
+}
+function updateFx(dt) {
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const f = fx[i]; f.t += dt; const p = f.t / f.life;
+    if (p >= 1) { fxGroup.remove(f.o); f.o.material.dispose(); fx.splice(i, 1); continue; }
+    if (f.type === 'str') { f.o.material.opacity = Math.pow(1 - p, 2); const w = 1 + 1.6 * Math.sin(f.t * 70) * (1 - p); f.o.scale.x = f.sx * (1 + Math.abs(w)); f.o.scale.y = 0.004 * (1 + Math.abs(w)); }
+    else if (f.type === 'ring') { const r = 0.012 + 0.11 * f.k * Math.pow(p, 0.6); f.o.scale.set(r, r, r * 0.6); f.o.position.y = f.y0 + 0.18 * p; f.o.material.opacity = (1 - p) * 0.9; }
+    else { f.o.position.y = f.y0 + 0.32 * p; f.o.material.opacity = 1 - p * p; }
+  }
+}
+
+// ---------- HUD ----------
+const $ = s => document.querySelector(s);
+const spec = $('#spec'), sctx = spec.getContext('2d'); let fbuf;
+function sizeSpec() { const r = spec.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); spec.width = r.width * d; spec.height = r.height * d; }
+sizeSpec(); addEventListener('resize', sizeSpec);
+function drawSpec() {
+  const w = spec.width, h = spec.height; sctx.clearRect(0, 0, w, h);
+  const bars = 64, bw = w / bars;
+  if (!analyser) { sctx.fillStyle = 'rgba(236,228,214,.08)'; for (let i = 0; i < bars; i++) sctx.fillRect(i * bw + 1, h - 2, bw - 2, 2); return; }
+  fbuf = fbuf || new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(fbuf);
+  const ny = ctx.sampleRate / 2;
+  for (let i = 0; i < bars; i++) { const f0 = 40 * Math.pow(12000 / 40, i / bars), f1 = 40 * Math.pow(12000 / 40, (i + 1) / bars); let mx = 0; for (let b = Math.floor(f0 / ny * fbuf.length); b <= Math.ceil(f1 / ny * fbuf.length); b++) mx = Math.max(mx, fbuf[b] || 0); const v = mx / 255; sctx.fillStyle = `rgba(222,186,104,${0.25 + v * 0.75})`; const bhh = Math.max(2, v * v * h); sctx.fillRect(i * bw + 1, h - bhh, bw - 2, bhh); }
+}
+function showNote(ks) { $('#note').textContent = noteName(ks.m); $('#note').style.color = '#' + pitchColor(ks.m).getHexString(); $('#freq').innerHTML = `${freqOf(ks.m).toFixed(1)} Hz · MIDI ${ks.m}<br>${ks.inst === 'grand' ? MAKERS[S.maker].name + ' ' + MAKERS[S.maker].model : 'เปียโนไฟฟ้าแบบไทน์'}`; }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => el.style.opacity = 0, 1800); }
+
+// ---------- camera ----------
+let tween = null;
+function flyTo(pos, tgt, dur = 1) { tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: tgt, t: 0, dur }; controls.autoRotate = false; }
+function epX() { return EP.group.position.x; }
+const VIEWS = {
+  overview: () => [VIEW0.pos.clone(), VIEW0.tgt.clone()],
+  player: () => S.inst === 'grand' ? [new THREE.Vector3(0, 1.38, 1.05), new THREE.Vector3(0, 0.78, -0.4)] : [new THREE.Vector3(epX(), 1.3, 1.05), new THREE.Vector3(epX(), 0.74, 0)],
+  top: () => [new THREE.Vector3(1.9, 2.7, -0.2), new THREE.Vector3(-0.1, 0.8, -G.L * 0.45)],
+  ep: () => [new THREE.Vector3(epX() + 0.5, 1.45, 1.15), new THREE.Vector3(epX(), 0.74, 0)],
+  exploded: () => S.inst === 'grand' ? [new THREE.Vector3(3.2, 2.8, 2.6), new THREE.Vector3(0.1, 1.25, -1.0)] : [new THREE.Vector3(epX() + 1.0, 1.7, 1.7), new THREE.Vector3(epX(), 0.95, 0.1)],
+};
+const go = v => { const [p, t] = VIEWS[v](); flyTo(p, t); };
+
+// ---------- selection ----------
+const selBox = new THREE.Box3Helper(new THREE.Box3(), 0xdcb460); selBox.visible = false; scene.add(selBox);
+function selectPart(I, key, fly) {
+  S.sel = { inst: I === G ? 'grand' : 'ep', key }; S.tab = 'parts'; renderRight();
+  if (fly) { const b = new THREE.Box3().setFromObject(I.parts[key].group), c = b.getCenter(new THREE.Vector3()), r = b.getSize(new THREE.Vector3()).length(); const dir = camera.position.clone().sub(controls.target).normalize(); flyTo(c.clone().add(dir.multiplyScalar(Math.max(0.9, r * 1.25))), c, 0.8); }
+}
+
+// ---------- tick ----------
+let last = performance.now();
+const ease = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+function tick() {
+  const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+  S.explode += (S.explodeT - S.explode) * Math.min(1, dt * 4); const e = ease(clamp(S.explode));
+  [G, EP].forEach(I => Object.entries(I.parts).forEach(([k, p]) => { p.group.position.copy(p.base).addScaledVector(p.off, e); if (I === G && S.una && (k === 'keys' || k === 'action')) p.group.position.x += 0.008; }));
+  [G, EP].forEach(I => I.keys.forEach(k => {
+    const tr = k.down ? 0.075 : 0; k.rot += (tr - k.rot) * Math.min(1, dt * (k.down ? 45 : 22)); k.mesh.rotation.x = k.rot;
+    if (k.ht >= 0) { k.ht += dt; const rise = k.inst === 'grand' ? 0.4 : 0.009, rest = k.down ? 0.12 : 0; let v; if (k.ht < 0.03) v = rise * k.ht / 0.03; else v = rest * (k.inst === 'grand' ? 1 : 0.0) + (rise - rest) * Math.exp(-(k.ht - 0.03) * 22); if (!k.down && k.ht > 0.5) { k.ht = -1; v = 0; } if (k.inst === 'grand') k.hammer.rotation.x = v; else k.hammer.position.y = k.hy + v; }
+    if (k.damper) { const up = k.down || S.sustain || sostSet.has('grand:' + k.m) ? 0.014 : 0; k.damper.position.y += (0.825 + up - k.damper.position.y) * Math.min(1, dt * 25); }
+  }));
+  G.pedals.forEach(p => { const on = { damper: S.sustain, una: S.una, sost: S.sost, half: S.half }[p.userData.pedal]; p.rotation.x += ((on ? 0.14 : 0) - p.rotation.x) * Math.min(1, dt * 18); });
+  EP.pedals.forEach(p => { p.rotation.x += ((S.sustain ? 0.02 : p.userData.rest) - p.rotation.x) * Math.min(1, dt * 18); });
+  updateFx(dt);
+  if (tween) { tween.t += dt / tween.dur; const k = ease(clamp(tween.t)); camera.position.lerpVectors(tween.p0, tween.p1, k); controls.target.lerpVectors(tween.t0, tween.t1, k); if (tween.t >= 1) tween = null; }
+  if (S.sel) { const I = S.sel.inst === 'grand' ? G : EP; const p = I.parts[S.sel.key]; if (p) { selBox.box.setFromObject(p.group); selBox.visible = true; } } else selBox.visible = false;
+  drawSpec();
+}
+const baseLoop = stage._loop; stage._loop = () => { tick(); baseLoop(); }; renderer.setAnimationLoop(stage._loop);
+
+// ---------- input: pointer ----------
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pick(e, list, recursive = false) { const r = canvas.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); return ray.intersectObjects(list, recursive)[0]; }
+let ptr = null, down = null;
+stage.addEventListener('pointerdown', e => {
+  if (e.composedPath()[0] !== canvas || e.button !== 0) return;
+  ensureAudio();
+  const h = pick(e, allKeyMeshes);
+  if (h) { e.stopPropagation(); e.preventDefault(); const ks = h.object.userData.key; if (ks.inst !== S.inst) setInst(ks.inst, false); ptr = { id: e.pointerId, ks }; noteOn(ks); return; }
+  down = { x: e.clientX, y: e.clientY };
+}, true);
+let hoverT = 0;
+addEventListener('pointermove', e => {
+  if (ptr && e.pointerId === ptr.id) { const h = pick(e, allKeyMeshes); const ks = h && h.object.userData.key; if (ks && ks !== ptr.ks) { noteOff(ptr.ks); ptr.ks = ks; noteOn(ks); } return; }
+  if (down || e.composedPath()[0] !== canvas) return;
+  const now = performance.now(); if (now - hoverT < 60) return; hoverT = now;
+  const h = pick(e, [root], true); stage.style.cursor = h && (h.object.userData.key || h.object.userData.pedal || S.explode > 0.05) ? 'pointer' : '';
+});
+addEventListener('pointerup', e => {
+  if (ptr && e.pointerId === ptr.id) { noteOff(ptr.ks); ptr = null; return; }
+  if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 5) {
+    const h = pick(e, [root], true);
+    if (h) { const o = h.object;
+      if (o.userData.pedal) { const t = o.userData.pedal; if (t === 'damper') setSustain(!S.sustain); else if (t === 'una') { S.una = !S.una; syncToggles(); } else if (t === 'sost') setSost(!S.sost); else { S.half = !S.half; syncToggles(); toast(S.half ? 'แป้นที่ 4: ค้อนเลื่อนเข้าใกล้สาย (เบาลง)' : 'ปล่อยแป้นที่ 4'); } }
+      else if (o.userData.part) selectPart(o.userData.inst, o.userData.part, false);
+    }
+  }
+  down = null;
+});
+
+// ---------- input: keyboard ----------
+const KMAP = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9, KeyU: 10, KeyJ: 11, KeyK: 12, KeyO: 13, KeyL: 14, KeyP: 15, Semicolon: 16, Quote: 17 };
+const kbHeld = new Map();
+const curI = () => S.inst === 'grand' ? G : EP;
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) { ensureAudio(); setSustain(true); } return; }
+  if (e.repeat) { if (KMAP[e.code] !== undefined) e.preventDefault(); return; }
+  if (e.code === 'KeyZ' || e.code === 'KeyX') { const I = curI(), lo = S.inst === 'grand' ? G.lo : 28, hi = S.inst === 'grand' ? 108 : 100; S.octave = clamp(S.octave + (e.code === 'KeyZ' ? -12 : 12), Math.ceil(lo / 12) * 12, hi - 12); $('#oct').textContent = noteName(S.octave); return; }
+  const i = KMAP[e.code]; if (i === undefined) return; e.preventDefault();
+  const ks = curI().keys.get(S.octave + i); if (!ks) return; kbHeld.set(e.code, ks); noteOn(ks, clamp(S.vel + 0.05));
+});
+addEventListener('keyup', e => {
+  if (e.code === 'Space') { setSustain(false); return; }
+  const ks = kbHeld.get(e.code); if (ks) { kbHeld.delete(e.code); noteOff(ks); }
+});
+addEventListener('blur', () => { kbHeld.forEach(k => noteOff(k)); kbHeld.clear(); });
+
+// ---------- demo ----------
+let demoTimers = [];
+function demo() {
+  demoTimers.forEach(clearTimeout); demoTimers = []; ensureAudio();
+  const I = curI(), o = S.inst === 'grand' ? 0 : 0;
+  const prog = [[36, 48, 55, 60, 64, 67, 72, 76], [33, 45, 52, 57, 60, 64, 69, 72], [29, 41, 48, 53, 57, 60, 65, 69], [31, 43, 50, 55, 59, 62, 67, 74]];
+  let t = 0; const step = 150;
+  prog.forEach((ch, ci) => {
+    const ks = ch.map(m => I.keys.get(m + o)).filter(Boolean);
+    ks.forEach((k, j) => { demoTimers.push(setTimeout(() => noteOn(k, 0.45 + 0.35 * (j / ks.length)), t + j * step)); });
+    const end = t + ks.length * step + 500; ks.forEach(k => demoTimers.push(setTimeout(() => noteOff(k), end)));
+    t = end + 60;
+  });
+  const fin = [24, 36, 48, 55, 64, 72, 79, 84].map(m => I.keys.get(m)).filter(Boolean);
+  fin.forEach((k, j) => demoTimers.push(setTimeout(() => noteOn(k, 0.8), t + j * 18)));
+  fin.forEach(k => demoTimers.push(setTimeout(() => noteOff(k), t + 2600)));
+}
+
+// ---------- UI ----------
+function setInst(i, fly = true) { S.inst = i; document.querySelectorAll('#instSeg button').forEach(b => b.classList.toggle('on', b.dataset.inst === i)); S.octave = 60; $('#oct').textContent = 'C4'; S.sel = null; renderRight(); if (fly) go('player'); }
+function renderMakers() {
+  $('#makers').innerHTML = Object.entries(MAKERS).map(([k, m]) => `<button class="opt ${S.maker === k ? 'on' : ''}" data-maker="${k}"><b>${m.name}</b><span class="num">${m.L.toFixed(2)} ม.</span><small>${m.model} · ${m.country}</small><span class="num">${m.keys}k · ${m.pedals}p</span></button>`).join('');
+  $('#artists').innerHTML = `<button class="opt ${!S.artist ? 'on' : ''}" data-artist=""><b>ไม่ระบุ</b><span></span><small>ใช้น้ำเสียงมาตรฐานของรุ่น</small></button>` + Object.entries(ARTISTS).map(([k, a]) => `<button class="opt ${S.artist === k ? 'on' : ''}" data-artist="${k}"><b>${a.name}</b><span class="num">${MAKERS[a.maker].name.split(' ')[0]}</span><small>${a.sub}</small></button>`).join('');
+}
+function setMaker(k, keepArtist) {
+  S.maker = k; if (!keepArtist) S.artist = null;
+  rebuildGrand(); const t = tone(); S.reverb = S.artist ? ARTISTS[S.artist].mod.reverb : t.reverb; $('#rev').value = S.reverb; $('#revO').textContent = Math.round(S.reverb * 100); if (revSend) revSend.gain.value = S.reverb;
+  if (S.inst !== 'grand') setInst('grand', false);
+  renderMakers(); S.tab = S.tab === 'parts' ? 'parts' : 'model'; renderRight();
+  toast(`${MAKERS[k].name} ${MAKERS[k].model}${S.artist ? ' · สไตล์ ' + ARTISTS[S.artist].name : ''}`);
+}
+$('#makers').addEventListener('click', e => { const b = e.target.closest('[data-maker]'); if (b) setMaker(b.dataset.maker); });
+$('#artists').addEventListener('click', e => { const b = e.target.closest('[data-artist]'); if (!b) return; const a = b.dataset.artist || null; S.artist = a; setMaker(a ? ARTISTS[a].maker : S.maker, true); });
+$('#instSeg').addEventListener('click', e => { const b = e.target.closest('[data-inst]'); if (b) setInst(b.dataset.inst); });
+$('#views').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) go(b.dataset.view); });
+$('#vel').oninput = e => { S.vel = +e.target.value; $('#velO').textContent = Math.round(S.vel * 100); };
+$('#rev').oninput = e => { S.reverb = +e.target.value; $('#revO').textContent = Math.round(S.reverb * 100); if (revSend) revSend.gain.value = S.reverb; };
+function syncToggles() {
+  const set = (id, on) => { const b = $(id); b.classList.toggle('on', on); b.querySelector('i').textContent = on ? 'ON' : 'OFF'; };
+  set('#tgSus', S.sustain); set('#tgFx', S.fx); set('#tgTrem', S.trem); set('#tgUna', S.una);
+}
+$('#tgSus').onclick = () => setSustain(!S.sustain);
+$('#tgFx').onclick = () => { S.fx = !S.fx; syncToggles(); };
+$('#tgTrem').onclick = () => { ensureAudio(); S.trem = !S.trem; tremDepth.gain.value = S.trem ? 0.35 : 0; syncToggles(); };
+$('#tgUna').onclick = () => { S.una = !S.una; syncToggles(); };
+$('#demo').onclick = demo;
+document.querySelectorAll('button').forEach(b => b.addEventListener('mouseup', () => b.blur()));
+document.querySelectorAll('.collapse').forEach(b => b.onclick = () => { const p = $('#' + b.dataset.col); p.classList.toggle('collapsed'); b.textContent = p.classList.contains('collapsed') ? '+' : '–'; });
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { S.tab = b.dataset.tab; renderRight(); } });
+
+function renderRight() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+  const mk = MAKERS[S.maker], el = $('#rbody');
+  $('#rEyebrow').textContent = S.inst === 'grand' ? `${mk.name} · ${mk.model}` : 'เปียโนไฟฟ้า · Tine 73';
+  if (S.tab === 'model') {
+    if (S.inst === 'grand') {
+      const a = S.artist && ARTISTS[S.artist];
+      el.innerHTML = `<div class="h2">${mk.name} ${mk.model}</div><div class="meta">${mk.city}, ${mk.country} · ก่อตั้ง ${mk.founded}</div>
+      <div class="specs"><div><b>${mk.L.toFixed(2)}</b><small>ยาว (ม.)</small></div><div><b>${mk.keys}</b><small>คีย์</small></div><div><b>${mk.pedals}</b><small>แป้น</small></div><div><b>${mk.weight.replace(' กก.', '')}</b><small>กก.</small></div></div>
+      <div class="lbl">ลักษณะเสียง</div><div style="text-wrap:pretty">${mk.character}</div>
+      <div class="lbl" style="margin-top:14px">เทคนิคการสร้าง</div><ul class="tech">${mk.tech.map(t => `<li>${t}</li>`).join('')}</ul>
+      ${a ? `<div class="quote"><span class="meta">สไตล์ ${a.name}</span>${a.text}</div>` : ''}
+      <div class="note">ลองเลือกผู้ผลิตอื่นทางซ้าย — โมเดลจะเปลี่ยนความยาว จำนวนคีย์ แป้น ทรงขา และน้ำเสียงจำลอง</div>`;
+    } else {
+      el.innerHTML = `<div class="h2">${EP_INFO.name}</div><div class="meta">${EP_INFO.model} · 73 คีย์ E1–E7</div>
+      <div class="specs"><div><b>1.13</b><small>กว้าง (ม.)</small></div><div><b>73</b><small>คีย์</small></div><div><b>1</b><small>แป้น</small></div><div><b>≈60</b><small>กก.</small></div></div>
+      <div class="lbl">หลักการทำงาน</div><ul class="tech">${EP_INFO.tech.map(t => `<li>${t}</li>`).join('')}</ul>
+      <div class="note">เปิด Tremolo ทางซ้ายเพื่อฟังเอฟเฟกต์แอมป์แบบคลาสสิก</div>`;
+    }
+  } else if (S.tab === 'parts') {
+    const I = S.inst === 'grand' ? G : EP, P = I.parts, sel = S.sel && S.sel.inst === S.inst && P[S.sel.key] ? S.sel.key : null;
+    const order = Object.keys(P);
+    let det = '';
+    if (sel) { const [th, en, d] = P[sel].info; const mn = S.inst === 'grand' && mk.parts[sel]; det = `<div class="detail"><h3>${th} <span class="meta">${en}</span></h3><p>${d}</p>${mn ? `<div class="mk"><b>${mk.name}:</b> ${mn}</div>` : ''}</div>`; }
+    el.innerHTML = `<div class="row" style="margin-top:4px"><span>แยกชิ้นส่วน</span><input type="range" id="exp" min="0" max="1" step="0.01" value="${S.explodeT}"><output>${Math.round(S.explodeT * 100)}</output></div>
+      <div class="seg" style="grid-template-columns:1fr 1fr"><button id="expBtn">${S.explodeT > 0.5 ? 'ประกอบกลับ' : 'แยกชิ้นส่วนทั้งหมด'}</button><button id="expView">มุมมองแยกชิ้น</button></div>
+      ${det}
+      <div class="parts">${order.map((k, i) => `<button class="part ${sel === k ? 'on' : ''}" data-part="${k}"><span class="n">${String(i + 1).padStart(2, '0')}</span><span>${P[k].info[0]} <span class="meta">${P[k].info[1]}</span></span></button>`).join('')}</div>
+      <div class="note">คลิกชิ้นส่วนในโมเดลหรือในรายการเพื่ออ่านคำอธิบาย · ยังเล่นคีย์ได้ขณะแยกชิ้นส่วน — ดูค้อนและสายทำงาน</div>`;
+    const ex = $('#exp'); ex.oninput = () => { S.explodeT = +ex.value; ex.nextElementSibling.textContent = Math.round(S.explodeT * 100); };
+    $('#expBtn').onclick = () => { S.explodeT = S.explodeT > 0.5 ? 0 : 1; renderRight(); if (S.explodeT) go('exploded'); };
+    $('#expView').onclick = () => go('exploded');
+    el.querySelectorAll('[data-part]').forEach(b => b.onclick = () => selectPart(I, b.dataset.part, true));
+  } else {
+    const ks = Object.entries(MAKERS);
+    const bar = (lab, val, pct, cur) => `<div class="bar ${cur ? 'cur' : ''}"><span>${lab}</span><div class="t"><i style="width:${Math.round(pct * 100)}%"></i></div><output>${val}</output></div>`;
+    const blk = (title, fn) => `<div class="sec"><div class="lbl">${title}</div><div class="bars">${ks.map(([k, m]) => fn(k, m)).join('')}</div></div>`;
+    el.innerHTML = `<div class="h2">เปรียบเทียบผู้ผลิต</div><div class="meta">รุ่นเรือธงคอนเสิร์ตแกรนด์ · คลิกชื่อทางซ้ายเพื่อโหลดโมเดล</div>
+    ${blk('ความยาวตัวเครื่อง', (k, m) => bar(m.name.replace('Steinway & Sons', 'Steinway').replace('C. ', ''), m.L.toFixed(2) + ' ม.', (m.L - 2.5) / 0.6, k === S.maker))}
+    ${blk('ความสว่างของเสียง (ค่าจำลอง)', (k, m) => bar(m.name.replace('Steinway & Sons', 'Steinway').replace('C. ', ''), Math.round(m.tone.bright * 100), m.tone.bright, k === S.maker))}
+    ${blk('ความยาวเสียง / ซัสเทน (ค่าจำลอง)', (k, m) => bar(m.name.replace('Steinway & Sons', 'Steinway').replace('C. ', ''), m.tone.decay.toFixed(2) + '×', m.tone.decay / 1.35, k === S.maker))}
+    <div class="sec"><div class="lbl">จุดเด่นเชิงช่าง</div><ul class="tech">${ks.map(([k, m]) => `<li><b style="font-weight:500;color:${k === S.maker ? 'var(--gold)' : 'var(--ink)'}">${m.name}</b> — ${m.tech[0]}</li>`).join('')}</ul></div>
+    <div class="sec"><div class="lbl">อะคูสติก vs ไฟฟ้า vs ดิจิทัล</div>
+    <div class="cmp"><div></div><div class="hd">แกรนด์</div><div class="hd">ไฟฟ้า (ไทน์)</div><div class="hd">ดิจิทัล</div>
+    <div class="rh">กำเนิดเสียง</div><div>ค้อนสักหลาดตีสายเหล็ก</div><div>ค้อนยางตีแท่งไทน์</div><div>เซนเซอร์อ่านความเร็วคีย์ → เสียงแซมเปิล/แบบจำลอง</div>
+    <div class="rh">ขยายเสียง</div><div>ซาวด์บอร์ด + ตัวเครื่อง</div><div>ปิกอัพ → แอมป์</div><div>ลำโพงในตัว / หูฟัง</div>
+    <div class="rh">การจูน</div><div>ทุก 6–12 เดือน</div><div>นานๆ ครั้ง เลื่อนสปริงถ่วง</div><div>ไม่ต้องจูน</div>
+    <div class="rh">น้ำหนัก</div><div>480–690 กก.</div><div>≈60 กก.</div><div>12–30 กก.</div>
+    <div class="rh">สีเสียง</div><div>ฮาร์มอนิกซับซ้อน สายสั่นพ้องกัน</div><div>หวาน กลม คล้ายระฆัง กดแรงแล้ว “bark”</div><div>ขึ้นกับคุณภาพแซมเปิล</div></div>
+    <div class="note">ค่าความสว่าง/ซัสเทนเป็นพารามิเตอร์ของเสียงสังเคราะห์ในเดโมนี้ ใช้เทียบลักษณะโดยประมาณ ไม่ใช่ค่าวัดจริง</div></div>`;
+  }
+}
+renderMakers(); renderRight(); syncToggles();
+window.__piano = { S, get G() { return G; }, get EP() { return EP; }, noteOn, tick, setMaker, go };
+</script>
+</body>
+</html>
