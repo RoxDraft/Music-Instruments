@@ -35,7 +35,7 @@ footer{margin-top:64px;color:#7d715f;font-size:13px}
 <script>
 // เพิ่มเครื่องดนตรีใหม่: ใส่ชื่อโฟลเดอร์ใน folder (ถ้ายังไม่พร้อม ให้ใส่ soon: true)
 const instruments = [
-  { folder: "Piano", tag: "Keyboard", name: "Concert Grand Piano", desc: "แกรนด์เปียโนเล่นได้ เปิดดูกลไกภายใน เทียบผู้ผลิตแต่ละเจ้า และมีเปียโนไฟฟ้าวางเทียบข้างๆ" },
+  { folder: "Interactive Concert Grand Piano Model1", tag: "Keyboard", name: "Concert Grand Piano", desc: "แกรนด์เปียโนเล่นได้ เปิดดูกลไกภายใน เทียบผู้ผลิตแต่ละเจ้า และมีเปียโนไฟฟ้าวางเทียบข้างๆ" },
 ];
 document.getElementById("grid").innerHTML = instruments.map(i =>
   `<a class="card${i.soon ? " soon" : ""}" href="${encodeURI(i.folder)}/">
